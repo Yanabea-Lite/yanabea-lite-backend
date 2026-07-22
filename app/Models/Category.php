@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class Category extends Model
 {
     protected $fillable = [
-
+        'name',
+        'description',
+        'slug',
+        'sort_order',
+        'is_active',
     ];
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
 }
