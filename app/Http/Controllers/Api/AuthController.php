@@ -6,22 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
-use App\Models\User;
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 
 class AuthController extends Controller
 {
+    public function __construct(private UserService $userService)
+    {}
+
     public function register(RegisterRequest $request)
     {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-            'role' => 'user',
-        ]);
+        $user = $this->userService->create($request->validated());
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -36,9 +32,12 @@ class AuthController extends Controller
     }
     public function login(LoginRequest $request)
     {
-        $user = User::where('email', $request->email)->first();
+        $user = $this->userService->findByCredentials(
+            $request->email,
+            $request->password
+        );
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials.',
