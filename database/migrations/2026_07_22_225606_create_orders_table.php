@@ -16,8 +16,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->decimal('total', 8, 2);
             $table->string('status');
-            $table->foreignId('payment_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('location_id')->nullable()->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

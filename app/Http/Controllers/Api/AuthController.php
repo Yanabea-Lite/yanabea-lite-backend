@@ -9,11 +9,9 @@ use App\Http\Resources\UserResource;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 
-
 class AuthController extends Controller
 {
-    public function __construct(private UserService $userService)
-    {}
+    public function __construct(private UserService $userService) {}
 
     public function register(RegisterRequest $request)
     {
@@ -27,9 +25,10 @@ class AuthController extends Controller
             'data' => [
                 'user' => new UserResource($user),
                 'token' => $token,
-            ]
+            ],
         ], 201);
     }
+
     public function login(LoginRequest $request)
     {
         $user = $this->userService->findByCredentials(
@@ -37,7 +36,7 @@ class AuthController extends Controller
             $request->password
         );
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials.',
@@ -55,6 +54,7 @@ class AuthController extends Controller
             ],
         ], 200);
     }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -64,6 +64,7 @@ class AuthController extends Controller
             'message' => 'Logged out successfully.',
         ], 200);
     }
+
     public function me(Request $request)
     {
         return response()->json([
@@ -72,6 +73,4 @@ class AuthController extends Controller
             'data' => new UserResource($request->user()),
         ], 200);
     }
-
-
 }
