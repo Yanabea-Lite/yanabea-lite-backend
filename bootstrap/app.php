@@ -2,19 +2,18 @@
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Illuminate\Http\Request;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -34,12 +33,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
 
         // Always return JSON for API request paths
-        $exceptions->shouldRenderJsonWhen(function (\Illuminate\Http\Request $request): bool {
+        $exceptions->shouldRenderJsonWhen(function (Request $request): bool {
             return $request->is('api/*') || $request->expectsJson();
         });
 
         // ValidationException
-        $exceptions->render(function (ValidationException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (ValidationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -50,7 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // AuthenticationException
-        $exceptions->render(function (AuthenticationException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -60,7 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // AuthorizationException
-        $exceptions->render(function (AuthorizationException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (AuthorizationException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -70,7 +69,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // ModelNotFoundException
-        $exceptions->render(function (ModelNotFoundException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (ModelNotFoundException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -80,7 +79,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // NotFoundHttpException
-        $exceptions->render(function (NotFoundHttpException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -90,7 +89,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // MethodNotAllowedHttpException
-        $exceptions->render(function (MethodNotAllowedHttpException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (MethodNotAllowedHttpException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -100,7 +99,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // TokenMismatchException (CSRF)
-        $exceptions->render(function (TokenMismatchException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (TokenMismatchException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -110,7 +109,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // ThrottleRequestsException
-        $exceptions->render(function (ThrottleRequestsException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -120,7 +119,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // PostTooLargeException
-        $exceptions->render(function (PostTooLargeException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (PostTooLargeException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -130,7 +129,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // HttpException (generic HTTP errors)
-        $exceptions->render(function (HttpException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (HttpException $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -140,9 +139,10 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // Catch-all for any unexpected Throwable
-        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 $message = config('app.debug') ? $e->getMessage() : 'Internal server error.';
+
                 return response()->json([
                     'success' => false,
                     'message' => $message,
